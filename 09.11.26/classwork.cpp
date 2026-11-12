@@ -117,7 +117,7 @@ Ints & Ints::operator=(Ints && rhs) noexcept
 
 Ints Ints::operator+(const Ints & rhs) const {
   if (getSize() != rhs.getSize()) {
-    throw std::invalid_argument("Arrays have diff size");
+    throw std::invalid_argument("Arrays have diff size\n");
   }
 
   Ints result(getSize(), 0);
@@ -141,7 +141,7 @@ void Ints::set(const size_t id, const int i) {
 
 void Ints::setSafe(const size_t id, const int i) {
   if (id >= size) {
-    throw std::logic_error("Out of range");
+    throw std::logic_error("Out of range\n");
   }
 
   set(id, i);
@@ -153,7 +153,7 @@ int Ints::get(const size_t id) const noexcept {
 
 int Ints::getSafe(const size_t id) const {
   if (id >= size) {
-    throw std::logic_error("Out of range");
+    throw std::logic_error("Out of range\n");
   }
   return get(id);
 }
@@ -164,7 +164,7 @@ size_t Ints::getSize() const noexcept {
 
 Ints Ints::append(const int i) const {
   if (std::numeric_limits< size_t >::max() - 1 < size) {
-    throw std::logic_error("Overflow");
+    throw std::logic_error("Overflow\n");
   }
 
   Ints temp(size+1);
@@ -181,7 +181,7 @@ Ints Ints::append(const int i) const {
 
 Ints Ints::append(const Ints &b) const {
   if (std::numeric_limits< size_t >::max() - size < b.size) {
-    throw std::logic_error("Overflow");
+    throw std::logic_error("Overflow\n");
   }
 
   Ints temp(size+b.size);
@@ -294,7 +294,6 @@ Mtx Mtx::addRow(const int pasta) const {
 
 Mtx Mtx::transpose() const {
   Mtx res(n, m);
-
   for (size_t i = 0; i < m; i++) {
     for (size_t j = 0; j < n; j++) {
       res.data_mtx.set(j * m + i, data_mtx.get(i * n + j));
@@ -304,23 +303,18 @@ Mtx Mtx::transpose() const {
 }
 
 int Mtx::det() const{
-  if (m != n) throw std::logic_error("Can't estimate determinant");
+  if (m != n) throw std::logic_error("Can't estimate determinant\n");
   if (m == 1) return data_mtx.get(0);
   if (m == 2) {
     return data_mtx.get(0) * data_mtx.get(3) - data_mtx.get(1) * data_mtx.get(2);
   }
-
   int res = 0;
-
   for (size_t i = 0; i < n; i++) {
     Mtx minor(m-1, n-1);
-
     size_t p = 0;
-
     for (size_t row = 1; row < m; row++) {
       for (size_t col = 0; col < n; col++) {
         if (col == i) continue;
-
         minor.data_mtx.set(p++, data_mtx.get(row * n + col));
       }
     }
@@ -363,7 +357,7 @@ public:
     size_t const size = data_points.getSize();
 
     if (size > std::numeric_limits<size_t>::max() - 1) {
-      throw std::logic_error("Overflow");
+      throw std::logic_error("Overflow\n");
     }
 
     Ints tmp(size+2);
@@ -408,8 +402,7 @@ int Plot::calc(const int x) const {
       return data_plot.get(i+1);
     }
   }
-
-  throw std::logic_error("Point not found");
+  throw std::logic_error("Point not found\n");
 }
 
 int Plot::solve(Ints & buf, const int y) const {
@@ -426,7 +419,6 @@ int Plot::solve(Ints & buf, const int y) const {
 Points Plot::append(const p_t p) const {
   size_t const size = data_plot.getSize();
   Ints tmp(size + 2);
-
   for (size_t i = 0; i < size; i++) {
     tmp.set(i, data_plot.get(i));
   }
