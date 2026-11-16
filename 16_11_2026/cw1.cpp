@@ -127,6 +127,11 @@ private:
   Color cl_;
 };
 
+class ColoredVector: public Vector, public Colored
+{
+
+}
+
 class Brush: public Colored
 {
 public:
