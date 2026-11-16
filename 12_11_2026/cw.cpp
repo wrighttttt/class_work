@@ -28,6 +28,12 @@ public:
     Mtxs erase(size_t pos) const;
     Mtxs erase(size_t first, size_t last) const;
 
+    Mtxs operator+(const Mtxs& rhs) const;
+    Mtxs operator+(const Mtx& rhs) const;
+
+    Mtxs& operator+=(const Mtxs& rhs);
+    Mtxs& operator+=(const Mtx& rhs);
+
 private:
     size_t k_;
     Mtx* mtxs_;
@@ -167,4 +173,22 @@ Mtxs Mtxs::erase(size_t first, size_t last) const {
     }
 
     return result;
+}
+
+Mtxs Mtxs::operator+(const Mtxs& rhs) const {
+    return insert(k_, rhs);
+}
+
+Mtxs Mtxs::operator+(const Mtx& rhs) const {
+    return insert(k_, rhs);
+}
+
+Mtxs& Mtxs::operator+=(const Mtxs& rhs) {
+    *this = *this + rhs;
+    return *this;
+}
+
+Mtxs& Mtxs::operator+=(const Mtx& rhs) {
+    *this = *this + rhs;
+    return *this;
 }
