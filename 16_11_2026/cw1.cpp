@@ -127,7 +127,7 @@ private:
   Color cl_;
 };
 
-class ColoredVector: public Vector, public Colored
+class ColoredCircle: public Circle, public Colored #homework. у Circle поля центр c Point. r радиус int, наследуется от planar, методы все из планара колорда sqr - возвращаюий int. abs_sqr возвращает квадрат радиуса. метод move(принимает точку и ничего не возвращает, центр переместить в точку)
 {
 
 }
