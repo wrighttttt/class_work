@@ -17,6 +17,11 @@ public:
     Mtxs& operator=(const Mtxs& rhs);
     Mtxs& operator=(Mtxs&& rhs) noexcept;
 
+    size_t getSize() const noexcept;
+
+    Mtx& operator[](size_t id) noexcept;
+    const Mtx& operator[](size_t id) const noexcept;
+
 private:
     size_t k_;
     Mtx* mtxs_;
@@ -74,4 +79,16 @@ Mtxs& Mtxs::operator=(Mtxs&& rhs) noexcept {
     }
 
     return *this;
+}
+
+size_t Mtxs::getSize() const noexcept {
+    return k_;
+}
+
+Mtx& Mtxs::operator[](size_t id) noexcept {
+    return mtxs_[id];
+}
+
+const Mtx& Mtxs::operator[](size_t id) const noexcept {
+    return mtxs_[id];
 }
