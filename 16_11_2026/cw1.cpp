@@ -1,16 +1,27 @@
 #include <iostream>
 
-namespace grebenshchikov
+const size_t planarSize = 3;
+const int planarTypes[planarSize] = {1, 2, 3};
+
+namespace arch
 {
   enum Color {RED, GREEN, BLUE};
+  Color makeColor(char c)
+  {
+    switch (c)
+    {
+    case 'r': return Color::RED;
+    case 'g': return Color::GREEN;
+    case 'b': return Color::BLUE;
+    default: throw std::logic_error("Incorrect color");
+    }
+  }
   class Planar;
   class Colored;
   class Point;
   class Vector;
   class ColoredPoint;
   class Brush;
-  class Circle;
-  class ColoredCircle;
 
   class Planar
   {
@@ -43,7 +54,7 @@ namespace grebenshchikov
 
     virtual std::ostream& info(std::ostream& out) override
     {
-      return out << "Point\n";
+      return out << "Point";
     }
 
     virtual int x() const override
@@ -61,6 +72,15 @@ namespace grebenshchikov
   private:
     int x_, y_;
   };
+  Planar* clonePoint(std::istream& in)
+  {
+    int x = 0, y = 0;
+    if (in >> x >> y)
+    {
+      return new Point(x, y);
+    }
+    throw std::logic_error("Incorrect point");
+  }
 
   class Vector: public Planar
   {
@@ -73,7 +93,7 @@ namespace grebenshchikov
 
     virtual std::ostream& info(std::ostream& out) override
     {
-      return out << "Vector\n";
+      return out << "Vector";
     }
 
     virtual int x() const override
@@ -91,52 +111,14 @@ namespace grebenshchikov
   private:
     Point a_, b_;
   };
-
-  class Circle: public Planar
+  Planar* cloneVector(std::istream& in)
   {
-  public:
-    Circle(Point center, int radius):
-      center_(center),
-      radius_(radius)
-    {}
-    virtual ~Circle() = default;
-
-    virtual std::ostream& info(std::ostream& out) override
+    int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+    if (in >> x1 >> y1 >> x2 >> y2)
     {
-      return out << "Circle\n";
+      return new Vector(Point(x1, y1), Point(x2, y2));
     }
-
-    virtual int x() const override
-    {
-      return center_.x();
-    }
-    virtual int y() const override
-    {
-      return center_.y();
-    }
-    virtual int abs_sqr() const override
-    {
-      return radius_ * radius_;
-    }
-
-    double sqr() const
-    {
-      return 3.14 * abs_sqr();
-    }
-
-    void move(Point center)
-    {
-      center_ = center;
-    }
-
-    void resize(int radius)
-    {
-      radius_ = radius;
-    }
-
-    private:
-    Point center_;
-    int radius_;
+    throw std::logic_error("Incorrect vector");
   }
 
   class ColoredPoint: public Planar, public Colored
@@ -150,7 +132,7 @@ namespace grebenshchikov
 
     virtual std::ostream& info(std::ostream& out) override
     {
-      return out << "Colored point\n";
+      return out << "Colored point";
     }
 
     virtual int x() const override
@@ -177,66 +159,23 @@ namespace grebenshchikov
     Point p_;
     Color cl_;
   };
-
-
-  class ColoredCircle: public Planar, public Colored
+  ColoredPoint* cloneColoredPoint(std::istream& in)
   {
-    public:
-      ColoredCircle(Circle a, Color color):
-        cir_(a),
-        cl_(color)
-      {}
-      
-      virtual ~ColoredCircle() = default;
-
-      virtual std::ostream& info(std::ostream& out) override
-      {
-        return out << "Colored Circle\n";
-      }
-
-      virtual int x() const override
-      {
-        return cir_.x();
-      }
-
-      virtual int y() const override
-      {
-        return cir_.y();
-      }
-
-      virtual int abs_sqr() const override
-      {
-        return cir_.abs_sqr();
-      }
-
-      double sqr() const
-      {
-        return cir_.sqr();
-      }
-
-      virtual Color getColor() const override
-      {
-        return cl_;
-      }
-
-      virtual void setColor(Color color) override
-      {
-        cl_ = color;
-      }
-
-      void move(Point center)
-      {
-        cir_.move(center);
-      }
-
-      void resize(int radius)
-      {
-        cir_.resize(radius);
-      }
-
-    private:
-      Circle cir_;
-      Color cl_;
+    int x = 0, y = 0;
+    char color = 0;
+    if (in >> x >> y >> color)
+    {
+      return new ColoredPoint(Point(x, y), makeColor(color));
+    }
+    throw std::logic_error("Incorrect colored point");
+  }
+  Planar* cloneColoredPointPlanar(std::istream& in)
+  {
+    return cloneColoredPoint(in);
+  }
+  Colored* cloneColoredPointColored(std::istream& in)
+  {
+    return cloneColoredPoint(in);
   }
 
   class Brush: public Colored
@@ -245,61 +184,217 @@ namespace grebenshchikov
     Brush(Color color):
       cl_(color)
     {}
-
     virtual ~Brush() = default;
 
     virtual Color getColor() const override
     {
       return cl_;
     }
-
     virtual void setColor(Color color) override
     {
       cl_ = color;
     }
-
   private:
     Color cl_;
   };
+  Colored* cloneBrush(std::istream& in)
+  {
+    char color = 0;
+    if (in >> color)
+    {
+      return new Brush(makeColor(color));
+    }
+    throw std::logic_error("Incorrect brush");
+  }
+
+  Planar* fabricPlanar(std::istream& in)
+  {
+    int num = 0;
+    in >> num;
+    switch (num)
+    {
+    case 1: return clonePoint(in);
+    case 2: return cloneVector(in);
+    case 3: return cloneColoredPointPlanar(in);
+    default: throw std::logic_error("Incorrect planar");
+    }
+  }
+
+  Colored* fabricColored(std::istream& in)
+  {
+    int num = 0;
+    in >> num;
+    switch (num)
+    {
+    case 3: return cloneColoredPointColored(in);
+    case 4: return cloneBrush(in);
+    default: throw std::logic_error("Incorrect colored");
+    }
+  }
 }
 
-std::ostream& print_abs_sqr(std::ostream& out, Planar* pl)
+namespace fabric
+{
+  class AbstractFabricPlanar
+  {
+  public:
+    virtual ~AbstractFabricPlanar() = default;
+
+    virtual arch::Planar* create(std::istream& in) = 0;
+  };
+
+  class FabricPoint: public AbstractFabricPlanar
+  {
+  public:
+    virtual ~FabricPoint() = default;
+    virtual arch::Planar* create(std::istream& in) override
+    {
+      int x = 0, y = 0;
+      if (in >> x >> y)
+      {
+        return new arch::Point(x, y);
+      }
+      throw std::logic_error("Incorrect point");
+    }
+  };
+
+  class FabricVector: public AbstractFabricPlanar
+  {
+  public:
+    virtual ~FabricVector() = default;
+    virtual arch::Planar* create(std::istream& in) override
+    {
+      int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+      if (in >> x1 >> y1 >> x2 >> y2)
+      {
+        return new arch::Vector(arch::Point(x1, y1), arch::Point(x2, y2));
+      }
+      throw std::logic_error("Incorrect vector");
+    }
+  };
+
+  class FabricColoredPoint: public AbstractFabricPlanar
+  {
+  public:
+    virtual ~FabricColoredPoint() = default;
+    virtual arch::Planar* create(std::istream& in) override
+    {
+      int x = 0, y = 0;
+      char color = 0;
+      if (in >> x >> y >> color)
+      {
+        return new arch::ColoredPoint(arch::Point(x, y), arch::makeColor(color));
+      }
+      throw std::logic_error("Incorrect colored point");
+    }
+  };
+
+  void clearFabricsPlanar(AbstractFabricPlanar** fabricsPlanar, size_t size)
+  {
+    for (size_t j = 0; j < size; j++)
+    {
+      delete fabricsPlanar[j];
+    }
+    delete[] fabricsPlanar;
+  }
+
+  AbstractFabricPlanar** makeFabricsPlanar()
+  {
+    AbstractFabricPlanar** fabricsPlanar = new AbstractFabricPlanar*[planarSize];
+    size_t i = 0;
+    try
+    {
+      fabricsPlanar[i] = new FabricPoint();
+      i++;
+      fabricsPlanar[i] = new FabricVector();
+      i++;
+      fabricsPlanar[i] = new FabricColoredPoint();
+      i++;
+    }
+    catch (const std::exception& e)
+    {
+      clearFabricsPlanar(fabricsPlanar, i);
+    }
+    return fabricsPlanar;
+  }
+}
+
+std::ostream& printAbsSqr(std::ostream& out, arch::Planar* pl)
 {
   return pl->info(out) << ' ' << pl->abs_sqr();
 }
 
-void del(Planar* pls[], size_t size)
+void clear(arch::Planar* pls[], size_t size)
 {
   for (size_t i = 0; i < size; i++)
   {
     delete pls[i];
   }
+  delete[] pls;
 }
 
 int main()
 {
-  const size_t cap = 6;
-  grebenshchikov::Planar* pls[cap];
-  size_t size = 0;
+  size_t cap = 0;
+  fabric::AbstractFabricPlanar** fabrics = fabric::makeFabricsPlanar();
+  std::cin >> cap;
+  if (!std::cin)
+  {
+    std::cerr << "Incorrect size\n";
+    return 1;
+  }
+
+  arch::Planar** pls = nullptr;
   try
   {
-    pls[size++] = new grebenshchikov::Point(1, 2);
-    pls[size++] = new grebenshchikov::Point(3, 4);
-    pls[size++] = new grebenshchikov::Vector(grebenshchikov::Point(1, 2), grebenshchikov::Point(3, 4));
-    pls[size++] = new grebenshchikov::Vector(grebenshchikov::Point(3, 4), grebenshchikov::Point(1, 2));
-    pls[size++] = new grebenshchikov::ColoredPoint(grebenshchikov::Point(1, 2), grebenshchikov::Color::RED);
-    pls[size++] = new grebenshchikov::ColoredPoint(grebenshchikov::Point(3, 4), grebenshchikov::Color::GREEN);
+    pls = new arch::Planar*[cap];
   }
   catch (const std::exception& e)
   {
-    grebenshchikov::del(pls, size);
+    fabric::clearFabricsPlanar(fabrics, planarSize);
     std::cerr << e.what() << '\n';
+    return 1;
+  }
+  
+  size_t size = 0;
+  while (size < cap && std::cin)
+  {
+    int num = 0;
+    try
+    {
+      for (size_t j = 0; j < planarSize; j++)
+      {
+        if (num == planarTypes[j])
+        {
+          pls[size] = fabrics[j]->create(std::cin);
+          size++;
+        }
+      }
+    }
+    catch (const std::exception& e)
+    {
+      fabric::clearFabricsPlanar(fabrics, planarSize);
+      clear(pls, size);
+      std::cerr << e.what() << '\n';
+      return 1;
+    }
   }
 
   for (size_t i = 0; i < size; i++)
   {
-    grebenshchikov::print_abs_sqr(std::cout, pls[i]) << '\n';
+    printAbsSqr(std::cout, pls[i]) << '\n';
   }
 
-  grebenshchikov::del(pls, size);
+  fabric::clearFabricsPlanar(fabrics, planarSize);
+  clear(pls, size);
 }
+
+// 1 - Point [x, y]
+// 2 - Vector [x1, y1, x2, y2]
+// 3 - ColoredPoint [x, y, color]
+// 4 - Brush [color]
+
+// 0. count
+// 1. [num] [args]
+// ...
+// count.
