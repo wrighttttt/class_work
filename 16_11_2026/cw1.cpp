@@ -1,3 +1,4 @@
+
 #include <iostream>
 
 const size_t planarSize = 3;
@@ -22,7 +23,8 @@ namespace arch
   class Vector;
   class ColoredPoint;
   class Brush;
-
+  class Circle;
+  class ColoredCircle;
   class Planar
   {
   public:
@@ -31,7 +33,7 @@ namespace arch
     virtual std::ostream& info(std::ostream& out) = 0;
     virtual int x() const = 0;
     virtual int y() const = 0;
-    virtual int abs_sqr() const = 0; 
+    virtual int abs_sqr() const = 0;
   };
 
   class Colored
@@ -51,12 +53,10 @@ namespace arch
       y_(y)
     {}
     virtual ~Point() = default;
-
     virtual std::ostream& info(std::ostream& out) override
     {
       return out << "Point";
     }
-
     virtual int x() const override
     {
       return x_;
@@ -72,6 +72,7 @@ namespace arch
   private:
     int x_, y_;
   };
+
   Planar* clonePoint(std::istream& in)
   {
     int x = 0, y = 0;
@@ -95,7 +96,6 @@ namespace arch
     {
       return out << "Vector";
     }
-
     virtual int x() const override
     {
       return b_.x() - a_.x();
@@ -111,6 +111,7 @@ namespace arch
   private:
     Point a_, b_;
   };
+
   Planar* cloneVector(std::istream& in)
   {
     int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
@@ -120,6 +121,51 @@ namespace arch
     }
     throw std::logic_error("Incorrect vector");
   }
+
+  class Circle: public Planar
+  {
+  public:
+    Circle(Point center, int radius):
+      center_(center),
+      radius_(radius)
+    {}
+    virtual ~Circle() = default;
+    virtual std::ostream& info(std::ostream& out) override
+    {
+      return out << "Circle\n";
+    }
+
+    virtual int x() const override
+    {
+      return center_.x();
+    }
+    virtual int y() const override
+    {
+      return center_.y();
+    }
+    virtual int abs_sqr() const override
+    {
+      return radius_ * radius_;
+    }
+
+    double sqr() const
+    {
+      return 3.14 * abs_sqr();
+    }
+
+    void move(Point center)
+    {
+      center_ = center;
+    }
+    void resize(int radius)
+    {
+      radius_ = radius;
+    }
+
+    private:
+    Point center_;
+    int radius_;
+  };
 
   class ColoredPoint: public Planar, public Colored
   {
@@ -134,7 +180,6 @@ namespace arch
     {
       return out << "Colored point";
     }
-
     virtual int x() const override
     {
       return p_.x();
@@ -159,6 +204,7 @@ namespace arch
     Point p_;
     Color cl_;
   };
+
   ColoredPoint* cloneColoredPoint(std::istream& in)
   {
     int x = 0, y = 0;
@@ -169,14 +215,75 @@ namespace arch
     }
     throw std::logic_error("Incorrect colored point");
   }
+
   Planar* cloneColoredPointPlanar(std::istream& in)
   {
     return cloneColoredPoint(in);
   }
+
   Colored* cloneColoredPointColored(std::istream& in)
   {
     return cloneColoredPoint(in);
   }
+
+  class ColoredCircle: public Planar, public Colored
+  {
+    public:
+      ColoredCircle(Circle a, Color color):
+        cir_(a),
+        cl_(color)
+      {}
+
+      virtual ~ColoredCircle() = default;
+
+      virtual std::ostream& info(std::ostream& out) override
+      {
+        return out << "Colored Circle\n";
+      }
+
+      virtual int x() const override
+      {
+        return cir_.x();
+      }
+
+      virtual int y() const override
+      {
+        return cir_.y();
+      }
+      virtual int abs_sqr() const override
+      {
+        return cir_.abs_sqr();
+      }
+
+      double sqr() const
+      {
+        return cir_.sqr();
+      }
+
+      virtual Color getColor() const override
+      {
+        return cl_;
+      }
+
+      virtual void setColor(Color color) override
+      {
+        cl_ = color;
+      }
+
+      void move(Point center)
+      {
+        cir_.move(center);
+      }
+
+      void resize(int radius)
+      {
+        cir_.resize(radius);
+      }
+
+    private:
+      Circle cir_;
+      Color cl_;
+  };
 
   class Brush: public Colored
   {
@@ -197,6 +304,7 @@ namespace arch
   private:
     Color cl_;
   };
+
   Colored* cloneBrush(std::istream& in)
   {
     char color = 0;
@@ -343,7 +451,7 @@ int main()
     std::cerr << "Incorrect size\n";
     return 1;
   }
-
+  
   arch::Planar** pls = nullptr;
   try
   {
@@ -355,7 +463,7 @@ int main()
     std::cerr << e.what() << '\n';
     return 1;
   }
-  
+
   size_t size = 0;
   while (size < cap && std::cin)
   {
@@ -379,7 +487,6 @@ int main()
       return 1;
     }
   }
-
   for (size_t i = 0; i < size; i++)
   {
     printAbsSqr(std::cout, pls[i]) << '\n';
